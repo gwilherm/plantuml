@@ -37,8 +37,11 @@ package net.sourceforge.plantuml.skin.rose;
 
 import net.sourceforge.plantuml.awt.geom.Dimension2D;
 
+import java.util.Objects;
+
 import net.sourceforge.plantuml.ISkinSimple;
 import net.sourceforge.plantuml.LineBreakStrategy;
+import net.sourceforge.plantuml.Url;
 import net.sourceforge.plantuml.UseStyle;
 import net.sourceforge.plantuml.cucadiagram.Display;
 import net.sourceforge.plantuml.graphic.FontConfiguration;
@@ -59,8 +62,10 @@ import net.sourceforge.plantuml.ugraphic.color.HColor;
 
 public class ComponentRoseReference extends AbstractTextualComponent {
 
+	private final int commentMargin = 0;
 	private final int cornersize = 10;
 	private final TextBlock textHeader;
+	private final TextBlock commentTextBlock;
 	private final double heightFooter = 5;
 	private final double xMargin = 2;
 	private final HorizontalAlignment position;
@@ -69,10 +74,10 @@ public class ComponentRoseReference extends AbstractTextualComponent {
 	private int roundCorner;
 
 	public ComponentRoseReference(Style style, Style styleHeader, FontConfiguration font, SymbolContext symbolContext,
-			FontConfiguration fcHeader, Display stringsToDisplay, HorizontalAlignment position,
+			FontConfiguration fcHeader, FontConfiguration smallFont, Url url, Display stringsToDisplay, HorizontalAlignment position,
 			ISkinSimple spriteContainer, HColor background) {
 		super(style, LineBreakStrategy.NONE, stringsToDisplay.subList(1, stringsToDisplay.size()), font,
-				HorizontalAlignment.LEFT, 4, 4, 4, spriteContainer, false, null, null);
+				HorizontalAlignment.LEFT, 15, 30, 1, spriteContainer, false, null, null);
 		if (UseStyle.useBetaStyle()) {
 			this.symbolContextHeader = styleHeader.getSymbolContext(spriteContainer.getThemeStyle(),
 					getIHtmlColorSet());
@@ -88,6 +93,27 @@ public class ComponentRoseReference extends AbstractTextualComponent {
 
 		this.textHeader = stringsToDisplay.subList(0, 1).create(fcHeader, HorizontalAlignment.LEFT, spriteContainer);
 
+		String displayLinkParam = spriteContainer.getValue("displayRefLink");
+		boolean displayLink = (Objects.nonNull(displayLinkParam) && "true".equalsIgnoreCase(displayLinkParam));
+
+		if (!displayLink || (url == null)) {
+			this.commentTextBlock = null;
+		} else {
+			final Display display = Display.getWithNewlines("[" + url.getLabel() + "]");
+			// final FontConfiguration smallFont2 = bigFont.forceFont(smallFont, null);
+			this.commentTextBlock = display.create(smallFont, HorizontalAlignment.LEFT, spriteContainer);
+		}
+	}
+
+	private double getSuppHeightForComment(StringBounder stringBounder) {
+		if (commentTextBlock == null)
+			return 0;
+
+		final double height = commentTextBlock.calculateDimension(stringBounder).getHeight();
+		if (height > 15)
+			return height - 15;
+
+		return 0;
 	}
 
 	@Override
@@ -146,6 +172,13 @@ public class ComponentRoseReference extends AbstractTextualComponent {
 			textPos = getMarginX1() + xMargin;
 		}
 		getTextBlock().drawU(ug.apply(new UTranslate(textPos, (getMarginY() + textHeaderHeight))));
+
+		if (commentTextBlock != null) {
+			final double x1 = getMarginX1() + textHeaderWidth;
+			final double y2 = getMarginY() + 1;
+
+			commentTextBlock.drawU(ug.apply(new UTranslate(x1 + commentMargin, y2)));
+		}
 	}
 
 	private double getHeaderHeight(StringBounder stringBounder) {
@@ -160,12 +193,20 @@ public class ComponentRoseReference extends AbstractTextualComponent {
 
 	@Override
 	public double getPreferredHeight(StringBounder stringBounder) {
-		return getTextHeight(stringBounder) + getHeaderHeight(stringBounder) + heightFooter;
+		return getTextHeight(stringBounder) + getHeaderHeight(stringBounder) + heightFooter + getSuppHeightForComment(stringBounder);
 	}
 
 	@Override
 	public double getPreferredWidth(StringBounder stringBounder) {
-		return Math.max(getTextWidth(stringBounder), getHeaderWidth(stringBounder)) + xMargin * 2
+		final double sup;
+		if (commentTextBlock == null) {
+			sup = xMargin * 2;
+		} else {
+			final Dimension2D size = commentTextBlock.calculateDimension(stringBounder);
+			sup = getMarginX1() + commentMargin + size.getWidth();
+		}
+
+		return Math.max(getTextWidth(stringBounder), getHeaderWidth(stringBounder)) + sup
 				+ symbolContextBody.getDeltaShadow();
 	}
 

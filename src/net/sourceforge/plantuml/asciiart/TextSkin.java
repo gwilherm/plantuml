@@ -37,6 +37,7 @@ package net.sourceforge.plantuml.asciiart;
 
 import net.sourceforge.plantuml.FileFormat;
 import net.sourceforge.plantuml.ISkinParam;
+import net.sourceforge.plantuml.Url;
 import net.sourceforge.plantuml.cucadiagram.Display;
 import net.sourceforge.plantuml.sequencediagram.NotePosition;
 import net.sourceforge.plantuml.skin.ArrowComponent;
@@ -84,6 +85,12 @@ public class TextSkin extends Rose {
 	public Component createComponentNote(Style[] styles, ComponentType type, ISkinParam param,
 			Display stringsToDisplay) {
 		return createComponentNote(styles, type, param, stringsToDisplay, null);
+	}
+
+	@Override
+	public Component createComponentReference(Style[] styles, ComponentType type, ArrowConfiguration config, ISkinParam param,
+			Display stringsToDisplay, Url url) {
+		return new ComponentTextReference(stringsToDisplay, fileFormat, param, url);
 	}
 
 	@Override
@@ -148,9 +155,6 @@ public class TextSkin extends Rose {
 		}
 		if (type == ComponentType.DESTROY) {
 			return new ComponentTextDestroy();
-		}
-		if (type == ComponentType.REFERENCE) {
-			return new ComponentTextReference(stringsToDisplay, fileFormat);
 		}
 		throw new UnsupportedOperationException(type.toString());
 	}

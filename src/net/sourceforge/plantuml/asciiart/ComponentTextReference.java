@@ -35,10 +35,11 @@
  */
 package net.sourceforge.plantuml.asciiart;
 
-import net.sourceforge.plantuml.awt.geom.Dimension2D;
-
 import net.sourceforge.plantuml.FileFormat;
+import net.sourceforge.plantuml.ISkinParam;
 import net.sourceforge.plantuml.StringUtils;
+import net.sourceforge.plantuml.Url;
+import net.sourceforge.plantuml.awt.geom.Dimension2D;
 import net.sourceforge.plantuml.cucadiagram.Display;
 import net.sourceforge.plantuml.graphic.StringBounder;
 import net.sourceforge.plantuml.skin.Area;
@@ -48,12 +49,16 @@ import net.sourceforge.plantuml.ugraphic.txt.UGraphicTxt;
 
 public class ComponentTextReference extends AbstractComponentText {
 
-	private final Display stringsToDisplay;
+	private final Display text;
 	private final FileFormat fileFormat;
+	private final Url url;
+	private final boolean displayLink;
 
-	public ComponentTextReference(Display stringsToDisplay, FileFormat fileFormat) {
-		this.stringsToDisplay = stringsToDisplay;
+	public ComponentTextReference(Display stringsToDisplay, FileFormat fileFormat, ISkinParam param, Url url) {
+		this.text = stringsToDisplay.subList(1,stringsToDisplay.size());
 		this.fileFormat = fileFormat;
+		this.url = url;
+		this.displayLink = "true".equalsIgnoreCase(param.getValue("displayRefLink"));
 	}
 
 	public void drawU(UGraphic ug, Area area, Context2D context) {
@@ -86,18 +91,26 @@ public class ComponentTextReference extends AbstractComponentText {
 			charArea.drawVLine('!', width - 1, 1, height);
 			charArea.drawHLine('~', height - 1, 1, width - 1);
 		}
-		
-		final Display text = stringsToDisplay.subList(1,stringsToDisplay.size());
+
+		if(displayLink && url != null) {
+			final String comment = url.getLabel().toString();
+			charArea.drawStringLR("[" + comment + "]", 9, 1);
+		}
 
 		charArea.drawStringsLRUnicode(text.asList(), 2, 3);
 	}
 
 	public double getPreferredHeight(StringBounder stringBounder) {
-		return StringUtils.getHeight(stringsToDisplay) + 3;
+		return StringUtils.getHeight(text) + 4;
 	}
 
 	public double getPreferredWidth(StringBounder stringBounder) {
-		return StringUtils.getWcWidth(stringsToDisplay) + 4;
+		int sup = 0;
+		if(displayLink && url != null) {
+			sup = url.getLabel().toString().length() + 9;
+		}
+		int val = Integer.max(StringUtils.getWcWidth(text), sup) + 4;
+		return val;
 	}
 
 }

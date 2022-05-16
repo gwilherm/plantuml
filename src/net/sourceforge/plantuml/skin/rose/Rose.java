@@ -43,6 +43,7 @@ import net.sourceforge.plantuml.ISkinParam;
 import net.sourceforge.plantuml.LineParam;
 import net.sourceforge.plantuml.PaddingParam;
 import net.sourceforge.plantuml.SkinParamUtils;
+import net.sourceforge.plantuml.Url;
 import net.sourceforge.plantuml.UseStyle;
 import net.sourceforge.plantuml.cucadiagram.Display;
 import net.sourceforge.plantuml.cucadiagram.Stereotype;
@@ -51,6 +52,8 @@ import net.sourceforge.plantuml.graphic.HorizontalAlignment;
 import net.sourceforge.plantuml.graphic.SkinParameter;
 import net.sourceforge.plantuml.graphic.SymbolContext;
 import net.sourceforge.plantuml.sequencediagram.NotePosition;
+import net.sourceforge.plantuml.sequencediagram.teoz.AbstractTile;
+import net.sourceforge.plantuml.sequencediagram.teoz.Tile;
 import net.sourceforge.plantuml.skin.ArrowComponent;
 import net.sourceforge.plantuml.skin.ArrowConfiguration;
 import net.sourceforge.plantuml.skin.ArrowDirection;
@@ -142,6 +145,28 @@ public class Rose {
 					stringsToDisplay, param, roundCorner, textAlign);
 		}
 		throw new UnsupportedOperationException(type.toString());
+	}
+
+	public Component createComponentReference(Style[] styles, ComponentType type, ArrowConfiguration config, ISkinParam param,
+			Display stringsToDisplay, Url url) {
+		checkRose();
+		final UFont fontGrouping = param.getFont(null, false, FontParam.SEQUENCE_GROUP);
+		final Stereotype stereotype = stringsToDisplay == null ? null : stringsToDisplay.getStereotypeIfAny();
+		final FontConfiguration bigFont = getUFont2(param, FontParam.SEQUENCE_GROUP_HEADER);
+		FontConfiguration smallFont = bigFont.forceFont(fontGrouping, null);
+		final HColor smallColor = SkinParamUtils.getFontColor(param, FontParam.SEQUENCE_GROUP, null);
+		if (smallColor != null) {
+			smallFont = smallFont.changeColor(smallColor);
+		}
+
+		if (type == ComponentType.REFERENCE) {
+			return new ComponentRoseReference(styles == null ? null : styles[0], styles == null ? null : styles[1],
+					getUFont2(param, FontParam.SEQUENCE_REFERENCE),
+					getSymbolContext(stereotype, param, ColorParam.sequenceReferenceBorder), bigFont, smallFont, url, stringsToDisplay,
+					param.getHorizontalAlignment(AlignmentParam.sequenceReferenceAlignment, null, false, null), param,
+					getHtmlColor(param, stereotype, ColorParam.sequenceReferenceBackground));
+		}
+		return null;
 	}
 
 	public Component createComponent(Style[] styles, ComponentType type, ArrowConfiguration config, ISkinParam param,
@@ -339,13 +364,6 @@ public class Rose {
 					deltaShadow(param, ColorParam.sequenceDividerBackground) > 0,
 					getStroke(param, LineParam.sequenceDividerBorder, 2),
 					getHtmlColor(param, stereotype, ColorParam.sequenceDividerBorder));
-		}
-		if (type == ComponentType.REFERENCE) {
-			return new ComponentRoseReference(styles == null ? null : styles[0], styles == null ? null : styles[1],
-					getUFont2(param, FontParam.SEQUENCE_REFERENCE),
-					getSymbolContext(stereotype, param, ColorParam.sequenceReferenceBorder), bigFont, stringsToDisplay,
-					param.getHorizontalAlignment(AlignmentParam.sequenceReferenceAlignment, null, false, null), param,
-					getHtmlColor(param, stereotype, ColorParam.sequenceReferenceBackground));
 		}
 		if (type == ComponentType.ENGLOBER) {
 			return new ComponentRoseEnglober(styles == null ? null : styles[0],

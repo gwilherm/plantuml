@@ -559,8 +559,8 @@ class DrawableSetInitializer {
 		Display strings = Display.empty();
 		strings = strings.add("ref");
 		strings = strings.addAll(reference.getStrings());
-		final Component comp = drawableSet.getSkin().createComponent(reference.getUsedStyles(), ComponentType.REFERENCE,
-				null, skinParam, strings);
+		final Component comp = drawableSet.getSkin().createComponentReference(reference.getUsedStyles(), ComponentType.REFERENCE,
+				null, skinParam, strings, reference.getUrl());
 		final GraphicalReference graphicalReference = new GraphicalReference(freeY2.getFreeY(range), comp, p1, p2,
 				reference.getUrl());
 
